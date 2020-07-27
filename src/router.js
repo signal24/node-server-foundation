@@ -32,7 +32,7 @@ class Router {
     }
 
     dir(dir) {
-        if (this.isBare) return copyRouter(this).dir(prefix);
+        if (this.isBare) return copyRouter(this).dir(dir);
         this.opts.dir += trimSlashes(dir) + '/';
         return this;
     }
