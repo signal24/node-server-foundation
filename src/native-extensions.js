@@ -25,3 +25,11 @@ Array.prototype.pluck = function(prop, keyProp) {
     });
     return result;
 }
+
+Array.prototype.keyBy = function(keyProp) {
+    let result = {};
+    this.forEach(elem => {
+        result[elem[keyProp]] = elem;
+    });
+    return result;
+}
