@@ -70,9 +70,10 @@ let cache = {
 };
 
 const builders = {
-    wsServer: () => require('./websocket'),
+    cli: () => require('./cli'),
     mysql: () => require('./mysql'),
-    uuid4: () => require('uuid').v4
+    uuid4: () => require('uuid').v4,
+    wsServer: () => require('./websocket')
 };
 
 function getOrBuildModule(name) {

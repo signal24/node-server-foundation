@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+const Migrator = require('./mysql/migrator');
 
 class MySQL {
     constructor() {
@@ -16,6 +17,11 @@ class MySQL {
         // simply verify that we can connect to the DB
         const conn = await this.pool.getConnection();
         await conn.release();
+    }
+
+    async migrate(dir) {
+        const migrator = new Migrator();
+        await migrator.run(dir);
     }
 
     async exec(sql, bindings) {
@@ -135,6 +141,8 @@ const instance = module.exports = new MySQL();
 // })
 
 function buildWhereFragment(where) {
+    if (!where) return [ '', [] ];
+
     const whereKeys = Object.keys(where);
     if (!whereKeys.length) return [ '', [] ];
 

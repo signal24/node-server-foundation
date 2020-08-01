@@ -1,4 +1,5 @@
 const Fastify = require('fastify');
+const FastifyFormBody = require('fastify-formbody');
 const FastifyMultipart = require('fastify-multipart');
 const fs = require('fs');
 const os = require('os');
@@ -15,10 +16,14 @@ module.exports = {
         });
 
         const app = this;
+
+        this.fastify.register(FastifyFormBody);
+
         this.fastify.register(FastifyMultipart);
         this.fastify.decorateRequest('processMultipart', function(opts) {
             return app._httpProcessMultipart(this, opts);
         });
+        
         this.fastify.decorateRequest('files', {});
 
         const cleanupFn = async (request, reply) => {
@@ -34,7 +39,7 @@ module.exports = {
         this.fastify.decorateRequest('json', '');
         this.fastify.addHook('preHandler', (request, _, done) => {
             if (request.body && request.body.constructor === Object)
-                request.json = request.body;
+                request.json = request.body; // TODO: change to 'input'
             else
                 request.json = {};
             done();
@@ -75,7 +80,7 @@ module.exports = {
                             name: fileName,
                             size: fileSize,
                             mimeType,
-                            path: outPath,
+                            path: outPath
                         };
 
                         isRequestComplete && resolve();

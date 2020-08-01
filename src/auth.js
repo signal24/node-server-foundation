@@ -69,7 +69,6 @@ class Auth {
         // uuid.v5(this.jwtIdPrefix, uuid.v5.URL, tokenIdBuf);
 
         const subjectType = typeof opts.subject;
-        
 
         const payload = {
             // jti: tokenIdBuf.toString('base64').replace(/=+$/, ''),

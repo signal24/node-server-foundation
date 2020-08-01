@@ -9,9 +9,11 @@
   "author": "Sean Ferguson <hello@sgnl24.com>",
   "license": "MIT",
   "dependencies": {
+    "commander": "^6.0.0",
     "dotenv": "^8.2.0",
     "fast-jwt": "^0.1.1",
     "fastify": "^3.1.1",
+    "fastify-formbody": "^4.0.3",
     "fastify-multipart": "^2.0.3",
     "fastify-static": "^3.2.0",
     "mysql2": "^2.1.0",
