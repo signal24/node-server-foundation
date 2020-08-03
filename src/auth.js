@@ -112,6 +112,10 @@ class Auth {
         reply.header('Set-Cookie', `${this.jwtCookieName}=${jwtPayload}; Path=/; HttpOnly`);
     }
 
+    clearJwtCookie(request, reply) {
+        reply.header('Set-Cookie', `${this.jwtCookieName}=invalid; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly`);
+    }
+
     setExpirationMinutes(mins) {
         this.jwtExpirationMins = mins;
     }
