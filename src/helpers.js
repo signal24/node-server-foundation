@@ -11,7 +11,8 @@ module.exports = {
     delay,
     promisify,
     randomBytes,
-    arrayToObject
+    arrayToObject,
+    smartRequire
 };
 
 function resolveFn(dir, param, expectedType = 'function') {
@@ -19,7 +20,7 @@ function resolveFn(dir, param, expectedType = 'function') {
         return param;
 
     if (typeof param === 'string') {
-        const anImport = require(dir + param);
+        const anImport = smartRequire(dir + param);
         if (typeof(anImport) !== 'function') throw new Error(`"${param}" must return a ${expectedType}`);
         return anImport;
     }
@@ -100,4 +101,11 @@ function arrayToObject(src, keyProp, valueProp) {
         result[el[keyProp]] = el[valueProp];
     });
     return result;
+}
+
+function smartRequire(path) {
+    if (global.$requireProxy)
+        return global.$requireProxy(require, path);
+    else
+        return require(path);
 }

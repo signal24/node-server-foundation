@@ -87,7 +87,7 @@ function createLogger(scope) {
 }
 
 function requireFromBase(path) {
-    return require(app.baseDir + path);
+    return helpers.smartRequire(app.baseDir + path);
 }
 
 global.$sf = new Proxy({}, {
