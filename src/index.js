@@ -12,10 +12,12 @@ class Application {
     baseDir = null;
     registeredMiddleware = [];
 
-    init(baseDir, envFilePath) {
+    init(baseDir, envFilePath, fastifyOpts = {}) {
         this.baseDir = baseDir.replace(/\/$/, '') + '/';
         this._loadEnv(envFilePath);
-        this._setupFastify();
+
+        this._loadHttpsConfig(fastifyOpts);
+        this._setupFastify(fastifyOpts);
 
         auth.init();
         this.registerMiddleware('auth', auth.authorizeRequest.bind(auth));
@@ -23,8 +25,7 @@ class Application {
 
     _loadEnv(envFilePath) {
         if (envFilePath) {
-            if (envFilePath.substr(0, 1) !== '/')
-                envFilePath = this.baseDir + envFilePath;
+            envFilePath = helpers.resolvePath(envFilePath);
         }
 
         try {

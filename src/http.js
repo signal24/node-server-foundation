@@ -7,12 +7,34 @@ const os = require('os');
 module.exports = {
     _httpMaxFileSize: 1*1024*1024,
 
-    _setupFastify() {
+    _loadHttpsConfig(targetOpts) {
+        let sslCert = null, sslKey = null;
+
+        if (process.env.NSF_HTTPS_CERT_FILE !== undefined)
+            sslCert = fs.readFileSync($sf.h.resolvePath(process.env.NSF_HTTPS_CERT_FILE), 'utf8');
+        else if (process.env.NSF_HTTPS_CERT !== undefined)
+            sslCert = process.env.NSF_HTTPS_CERT;
+        
+        if (process.env.NSF_HTTPS_KEY_FILE !== undefined)
+            sslKey = fs.readFileSync($sf.h.resolvePath(process.env.NSF_HTTPS_KEY_FILE), 'utf8');
+        else if (process.env.NSF_HTTPS_KEY !== undefined)
+            sslKey = process.env.NSF_HTTPS_KEY;
+        
+        if (sslCert) {
+            targetOpts.https = {
+                cert: sslCert,
+                key: sslKey
+            };
+        }
+    },
+
+    _setupFastify(fastifyOpts = {}) {
         this.fastify = Fastify({
             logger: {
                 // TODO
                 prettyPrint: true
-            }
+            },
+            ...fastifyOpts
         });
 
         const app = this;

@@ -1,8 +1,10 @@
+const nodePath = require('path');
 const crypto = require('crypto');
 
 let mutexCache = [];
 
 module.exports = {
+    resolvePath,
     resolveFn,
     format,
     generateKVHmac,
@@ -14,6 +16,13 @@ module.exports = {
     arrayToObject,
     smartRequire
 };
+
+function resolvePath(path) {
+    if (path.substr(0, 1) === '/')
+        return path;
+    else
+        return nodePath.normalize($sf.app.baseDir + path);
+}
 
 function resolveFn(dir, param, expectedType = 'function') {
     if (typeof param === 'function')
