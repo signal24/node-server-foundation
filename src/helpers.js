@@ -80,6 +80,8 @@ async function mutexExecCtx(key, context, fn, ...args) {
             catch (err) {
                 reject(err);
             }
+
+            delete mutexCache[key];
         });
     }
 
