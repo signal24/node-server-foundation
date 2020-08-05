@@ -18,7 +18,7 @@ module.exports = {
 };
 
 function resolvePath(path) {
-    if (path.substr(0, 1) === '/')
+    if (nodePath.isAbsolute(path))
         return path;
     else
         return nodePath.normalize($sf.app.baseDir + path);
