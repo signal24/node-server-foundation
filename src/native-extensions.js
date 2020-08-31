@@ -60,3 +60,13 @@ Object.defineProperty(Array.prototype, 'keyBy', {
         return result;
     }
 });
+
+String.prototype.ucfirst = function() {
+    return this.substr(0, 1).toUpperCase() + this.substr(1);
+}
+
+String.prototype.ucwords = function() {
+    return this.replace(/^[a-z]| [a-z]/gi, function(value) {
+        return value.toUpperCase();
+    });
+}
