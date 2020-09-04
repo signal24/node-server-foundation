@@ -4,17 +4,17 @@ const jwt = require('fast-jwt');
 
 class Auth {
     init() {
-        if (!process.env.JWT_SECRET) return;
+        if (!process.env.NSF_JWT_SECRET) return;
 
-        const secret = Buffer.from(process.env.JWT_SECRET, 'base64');
-        this.jwtIssuer = process.env.JWT_ISSUER;
+        const secret = Buffer.from(process.env.NSF_JWT_SECRET, 'base64');
+        this.jwtIssuer = process.env.NSF_JWT_ISSUER;
         this.jwtSigner = jwt.createSigner({ key: secret });
         this.jwtVerifier = jwt.createVerifier({ key: secret, cache: true, allowedIss: this.jwtIssuer });
 
-        this.jwtIdPrefix = os.hostname() + '/' + (process.env.APP_NAME || 's24nsf') + '/' + process.pid;
+        this.jwtIdPrefix = os.hostname() + '/' + (process.env.NSF_APP_NAME || 's24nsf') + '/' + process.pid;
         this.jwtExpirationMins = 15;
 
-        this.jwtCookieName = process.env.JWT_COOKIE_NAME || 'jwt';
+        this.jwtCookieName = process.env.NSF_JWT_COOKIE_NAME || 'jwt';
         this.jwtCookieRe = new RegExp('(^|;)[ ]*' + this.jwtCookieName + '=([^;]+)');
     }
 

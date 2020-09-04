@@ -31,8 +31,7 @@ module.exports = {
     _setupFastify(fastifyOpts = {}) {
         this.fastify = Fastify({
             logger: {
-                // TODO
-                prettyPrint: true
+                prettyPrint: process.env.NODE_ENV !== 'production'
             },
             ...fastifyOpts
         });
