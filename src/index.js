@@ -17,6 +17,7 @@ class Application {
         this._loadEnv(envFilePath);
 
         this._loadHttpsConfig(fastifyOpts);
+        this._loadProxyConfig(fastifyOpts);
         this._setupFastify(fastifyOpts);
 
         auth.init();

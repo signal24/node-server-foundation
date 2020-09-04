@@ -28,6 +28,19 @@ module.exports = {
         }
     },
 
+    _loadProxyConfig(targetOpts) {
+        targetOpts.trustProxy = (function() {
+            const proxySetting = process.env.NSF_TRUST_PROXY;
+            if (!proxySetting) return false;
+            if (proxySetting.toLowerCase() === 'false') return false;
+            if (proxySetting.toLowerCase() === 'true') return true;
+            if (/^[0-9]+$/.test(proxySetting)) return parseInt(proxySetting);
+            if (!/^[0-9.,/]+$/.test(proxySetting)) throw new Error('invalid value for NSF_TRUST_PROXY');
+            if (proxySetting.includes(',')) return proxySetting.split(',');
+            return proxySetting;
+        })();
+    },
+
     _setupFastify(fastifyOpts = {}) {
         this.fastify = Fastify({
             logger: {
