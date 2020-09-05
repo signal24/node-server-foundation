@@ -21,7 +21,7 @@ function resolvePath(path) {
     if (nodePath.isAbsolute(path))
         return path;
     else
-        return nodePath.normalize($sf.app.baseDir + path);
+        return nodePath.normalize($sf.app.srcDir + path);
 }
 
 function resolveFn(dir, param, expectedType = 'function') {

@@ -1,6 +1,7 @@
 require('./native-extensions');
 
 const auth = require('./auth');
+const fs = require('fs');
 const helpers = require('./helpers');
 const Http = require('./http');
 const errors = require('./errors');
@@ -10,29 +11,34 @@ const Router = require('./router');
 
 class Application {
     baseDir = null;
+    srcDir = null;
+    name = null;
+    version = null;
+    isHttps = false;
     registeredMiddleware = [];
+    requestErrorHandler = null;
 
-    init(baseDir, envFilePath, fastifyOpts = {}) {
+    init(baseDir, fastifyOpts) {
         this.baseDir = baseDir.replace(/\/$/, '') + '/';
-        this._loadEnv(envFilePath);
+        this.srcDir = this.baseDir + 'src/';
+        
+        const packageMeta = require(this.baseDir + 'package.json');
+        this.name = packageMeta.name;
+        this.version = packageMeta.version;
 
-        this._loadHttpsConfig(fastifyOpts);
-        this._loadProxyConfig(fastifyOpts);
+        this._loadEnv();
+    
         this._setupFastify(fastifyOpts);
 
         auth.init();
         this.registerMiddleware('auth', auth.authorizeRequest.bind(auth));
     }
 
-    _loadEnv(envFilePath) {
-        if (envFilePath) {
-            envFilePath = helpers.resolvePath(envFilePath);
-        }
-
+    _loadEnv() {
         try {
             const dotenv = require('dotenv');
             dotenv.config({
-                path: envFilePath || this.baseDir + '.env'
+                path: this.baseDir + '.env'
             });
         } catch (err) {
             if (err.code === 'MODULE_NOT_FOUND') return;
@@ -42,14 +48,18 @@ class Application {
 
     // TODO: change to use a class, support singleton props, default true?
     registerMiddleware(name, param) {
-        const fn = helpers.resolveFn(this.baseDir, param);
+        const fn = helpers.resolveFn(this.srcDir, param);
         this.registeredMiddleware[name] = fn;
     }
 
     registerRoutes(param) {
-        const fn = helpers.resolveFn(this.baseDir, param);
+        const fn = helpers.resolveFn(this.srcDir, param);
         const router = new Router(this);
         fn(router);
+    }
+    
+    setRequestErrorHandler(fn) {
+        this.requestErrorHandler = fn;
     }
 
     start(port, ip) {
@@ -68,12 +78,13 @@ let cache = {
     err: errors,
     h: helpers,
     log: createLogger,
-    require: requireFromBase
+    require: requireFromSrcDir
 };
 
 const builders = {
     cli: () => require('./cli'),
     mysql: () => require('./mysql'),
+    sentry: () => require('./sentry'),
     uuid4: () => require('uuid').v4,
     wsServer: () => require('./websocket')
 };
@@ -88,8 +99,8 @@ function createLogger(scope) {
     return app.fastify.log.child({ scope });
 }
 
-function requireFromBase(path) {
-    return helpers.smartRequire(app.baseDir + path);
+function requireFromSrcDir(path) {
+    return helpers.smartRequire(app.srcDir + path);
 }
 
 global.$sf = new Proxy({}, {

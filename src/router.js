@@ -14,7 +14,7 @@ class Router {
             this.isBare = true;
             this.opts.middleware = [];
             this.opts.prefix = '/';
-            this.opts.dir = this.app.baseDir;
+            this.opts.dir = this.app.srcDir;
         }
     }
 
@@ -126,7 +126,7 @@ class Router {
         }
 
         this.app.fastify.register(fastifyStatic, {
-            root: path.normalize(this.app.baseDir + '/' + localPath),
+            root: path.normalize(this.app.srcDir + '/' + localPath),
             prefix: urlPath,
             decorateReply: urlPath === '/'
         });

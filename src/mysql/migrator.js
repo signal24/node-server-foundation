@@ -1,11 +1,10 @@
 const fs = require('fs');
-const { exec } = require('child_process');
 const log = function() { console.log.apply(console, arguments); } // TODO: do better logging
 
 class Migrator {
     async run(dir) {
         dir = dir || 'migrations';
-        dir = $sf.app.baseDir + dir;
+        dir = $sf.app.srcDir + dir;
 
         if (!fs.existsSync(dir))
             throw new Error('migrations directory does not exist');

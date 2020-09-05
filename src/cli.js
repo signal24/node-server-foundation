@@ -18,7 +18,7 @@ function hasArgs() {
 }
 
 function registerCommand(commandString, handlerPath) {
-    let handler = $sf.h.resolveFn($sf.app.baseDir, handlerPath, 'class');
+    let handler = $sf.h.resolveFn($sf.app.srcDir, handlerPath, 'class');
     let command = program.command(commandString);
     if (handler.configure !== undefined) handler.configure(command);
     command.action((...args) => {

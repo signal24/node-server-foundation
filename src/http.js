@@ -25,6 +25,8 @@ module.exports = {
                 cert: sslCert,
                 key: sslKey
             };
+
+            this.isHttps = true;
         }
     },
 
@@ -42,6 +44,9 @@ module.exports = {
     },
 
     _setupFastify(fastifyOpts = {}) {
+        this._loadHttpsConfig(fastifyOpts);
+        this._loadProxyConfig(fastifyOpts);
+
         this.fastify = Fastify({
             logger: {
                 prettyPrint: process.env.NODE_ENV !== 'production'

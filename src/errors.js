@@ -2,6 +2,8 @@ process.listeners('unhandledRejection').length || process.on('unhandledRejection
     throw err;
 });
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 class UnauthorizedError extends Error {
     type = 'UnauthorizedError';
     httpStatus = 401;
@@ -44,7 +46,9 @@ function _handleFastifyError(err, request, reply) {
     }
 
     request.log.error(err);
-    reply.send(err);
+    $sf.app.requestErrorHandler && $sf.app.requestErrorHandler(err, request, reply);
+
+    reply.send(isProduction ? new Error('Internal Server Error') : err);
 }
 
 module.exports = {
