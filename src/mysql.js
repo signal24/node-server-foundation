@@ -1,5 +1,6 @@
 const mysql = require('mysql2/promise');
 const Migrator = require('./mysql/migrator');
+const Model = require('./mysql/model');
 
 class MySQL {
     constructor() {
@@ -17,11 +18,17 @@ class MySQL {
         // simply verify that we can connect to the DB
         const conn = await this.pool.getConnection();
         await conn.release();
+
+        await Model.populateSchemaCache();
     }
 
     async migrate(dir) {
         const migrator = new Migrator();
         await migrator.run(dir);
+    }
+
+    async addHook(table, hook) {
+        Model.addHook(table, hook);
     }
 
     async exec(sql, bindings) {
@@ -82,13 +89,17 @@ const Injections = {
         return results.length > 0 ? results[0] : null;
     },
 
-    async fetch(table, where) {
+    async fetch(table, where, opts = {}) {
         const [ whereFragment, whereBindings ] = buildWhereFragment(where);
-        return this.query('SELECT * FROM `' + table + '`' + whereFragment, whereBindings);
+        const cols = opts.cols === undefined ? '*' : '`' + opts.cols.join('`,`') + '`';
+        let query = 'SELECT ' + cols + ' FROM `' + table + '`' + whereFragment;
+        if (opts.order !== undefined) query += ' ORDER BY ' + (typeof opts.order === 'object' ? '`' + opts.order.col + '` ' + opts.order.dir : '`' + opts.order + '` ASC');
+        const results = await this.query(query, whereBindings);
+        return results.map(row => Model.buildModel(table, { ...row }));
     },
 
-    async fetchOne(table, where) {
-        const result = await this.fetch(table, where);
+    async fetchOne(table, where, opts) {
+        const result = await this.fetch(table, where, opts);
         return result.length > 0 ? result[0] : null;
     },
 
@@ -98,9 +109,17 @@ const Injections = {
         return result !== null;
     },
 
+    async getCount(table, where, col) {
+        const [ whereFragment, whereBindings ] = buildWhereFragment(where);
+        const result = await this.queryOne('SELECT COUNT(' + (col || '*') + ') AS count FROM `' + table + '`' + whereFragment, whereBindings);
+        return result.count;
+    },
+
     async insert(table, obj) {
         const [ results ] = await this.exec('INSERT INTO `' + table + '` SET ?', obj);
-        return results.insertId;
+        const insertId = results.insertId;
+        obj.id = insertId;
+        return Model.buildModel(table, obj);
     },
 
     async update(table, obj, where) {
@@ -132,14 +151,6 @@ const Injections = {
 Object.assign(MySQL.prototype, Injections);
 Object.assign(Transaction.prototype, Injections);
 
-const instance = module.exports = new MySQL();
-
-// module.exports = new Proxy(instance, {
-//     get(_, prop) {
-//         return instance[prop] || instance.pool[prop];
-//     }
-// })
-
 function buildWhereFragment(where) {
     if (!where) return [ '', [] ];
 
@@ -160,3 +171,5 @@ function buildWhereFragment(where) {
 
     return [ ' WHERE ' + wheres.join(' AND '), bindings ];
 }
+
+module.exports = new MySQL();
