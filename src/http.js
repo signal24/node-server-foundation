@@ -96,11 +96,12 @@ module.exports = {
         request.files = {};
 
         return new Promise((resolve, reject) => {
+            let openFileCount = 0;
             let isRequestComplete = false;
 
             request.multipart(
                 (field, file, fileName, encoding, mimeType) => {
-                    if (!doesMatchSet(allowedFields, field))
+                    if (allowedFields !== true && !doesMatchSet(allowedFields, field))
                         return reject(new $sf.err.InvalidRequestError(`"${field}" is not an allowed file field`));
 
                     if (allowedTypes !== true && !doesMatchSet(allowedTypes, mimeType))
@@ -111,6 +112,7 @@ module.exports = {
 
                     const outPath = os.tmpdir() + '/sfupload_' + process.pid + '_' + request.id + '_' + field.replace(/[^a-z0-9_-]/ig, '');
                     const outStream = fs.createWriteStream(outPath, { emitClose: true });
+                    openFileCount++;
 
                     outStream.on('close', () => {
                         if (!isFileComplete) return fs.unlink(outPath, () => {});
@@ -122,7 +124,8 @@ module.exports = {
                             path: outPath
                         };
 
-                        isRequestComplete && resolve();
+                        openFileCount--;
+                        openFileCount === 0 && isRequestComplete && resolve();
                     });
 
                     file.on('limit', () => {
@@ -146,7 +149,8 @@ module.exports = {
                     });
                 },
                 () => {
-                    isRequestComplete = true;   
+                    isRequestComplete = true;
+                    openFileCount || resolve();
                 },
                 {
                     limits: {
