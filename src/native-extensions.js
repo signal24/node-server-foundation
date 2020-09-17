@@ -28,6 +28,13 @@ Object.defineProperty(Array.prototype, 'intersect', {
     }
 });
 
+Object.defineProperty(Array.prototype, 'unique', {
+    enumerable: false,
+    value: function() {
+        return [...new Set(this)]
+    }
+});
+
 Object.defineProperty(Array.prototype, 'remove', {
     enumerable: false,
     value: function(element) {
