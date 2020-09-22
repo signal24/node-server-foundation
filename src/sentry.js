@@ -48,7 +48,7 @@ function init(dsn) {
                 };
 
                 event.user = {
-                    id: request.auth.id,
+                    id: request.auth?.id,
                     ip_address: request.ip
                 };
 
