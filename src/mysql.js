@@ -62,7 +62,13 @@ class Transaction {
     }
 
     async exec(sql, bindings) {
-        return await this.conn.query(sql, bindings)
+        try {
+            return await this.conn.query(sql, bindings);
+        } catch (err) {
+            err.query = sql;
+            err.bindings = bindings;
+            throw err;
+        }
     }
 
     async commit() {
