@@ -122,16 +122,27 @@ const Injections = {
     },
 
     async insert(table, obj) {
-        const [ results ] = await this.exec('INSERT INTO `' + table + '` SET ?', obj);
-        const insertId = results.insertId;
-        obj.id = insertId;
+        return await this._insert(table, obj, 'INSERT');
+    },
+
+    async insertIgnore(table, obj) {
+        return await this._insert(table, obj, 'INSERT IGNORE');
+    },
+
+    async replace(table, obj) {
+        return await this._insert(table, obj, 'REPLACE');
+    },
+
+    async _insert(table, obj, cmd) {
+        const [ results ] = await this.exec(cmd + ' INTO `' + table + '` SET ?', obj);
+        obj.id = obj.id || results.insertId;
         return Model.buildModel(table, obj);
     },
 
     async update(table, obj, where) {
         let updates = [];
         let bindings = [];
-        
+
         Object.keys(obj).forEach(key => {
             updates.push('`' + key + '`=?');
             bindings.push(obj[key]);
