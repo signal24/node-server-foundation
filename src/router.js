@@ -9,10 +9,10 @@ class Router {
     constructor(app, opts) {
         this.app = app;
         this.opts = opts || {};
-        
+
         if (typeof opts == 'undefined') {
             this.isBare = true;
-            this.opts.middleware = [];
+            this.opts.middleware = app.defaultMiddleware || [];
             this.opts.prefix = '/';
             this.opts.dir = this.app.srcDir;
         }
@@ -175,7 +175,7 @@ async function handleThenValidateReply(handler, request, reply) {
     if (!reply.sent) {
         if (typeof result == 'undefined')
             reply.status(501).send('HTTP handler did not return or send data');
-        else    
+        else
             reply.send(result);
     }
 }
@@ -183,14 +183,14 @@ async function handleThenValidateReply(handler, request, reply) {
 function makeWebSocketHandler(router, targetClass) {
     const handler = async (request, reply) => {
         const classInstance = new targetClass();
-        
+
         if (typeof classInstance.authorize === 'function') {
             await classInstance.authorize(request, reply);
             if (reply.sent) return;
         }
 
         reply.sent = true;
-        
+
         request.raw.removeAllListeners();
         $sf.wsServer.handleUpgrade(request, request.raw.socket, Buffer.alloc(0), async ws => {
             try {

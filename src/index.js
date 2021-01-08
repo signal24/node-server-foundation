@@ -15,19 +15,20 @@ class Application {
     name = null;
     version = null;
     isHttps = false;
-    registeredMiddleware = [];
+    registeredMiddleware = {};
+    defaultMiddleware = [];
     requestErrorHandler = null;
 
     init(baseDir, fastifyOpts) {
         this.baseDir = baseDir.replace(/\/$/, '') + '/';
         this.srcDir = this.baseDir + 'src/';
-        
+
         const packageMeta = require(this.baseDir + 'package.json');
         this.name = packageMeta.name;
         this.version = packageMeta.version;
 
         this._loadEnv();
-    
+
         this._setupFastify(fastifyOpts);
 
         auth.init();
@@ -52,12 +53,17 @@ class Application {
         this.registeredMiddleware[name] = fn;
     }
 
+    registerDefaultMiddleware(name, param) {
+        this.registerMiddleware(name, param);
+        this.defaultMiddleware.push(name);
+    }
+
     registerRoutes(param) {
         const fn = helpers.resolveFn(this.srcDir, param);
         const router = new Router(this);
         fn(router);
     }
-    
+
     setRequestErrorHandler(fn) {
         this.requestErrorHandler = fn;
     }
@@ -78,7 +84,8 @@ let cache = {
     err: errors,
     h: helpers,
     log: createLogger,
-    require: requireFromSrcDir
+    require: requireFromSrcDir,
+    isLoaded
 };
 
 const builders = {
@@ -93,6 +100,10 @@ function getOrBuildModule(name) {
     if (cache[name]) return cache[name];
     if (builders[name]) return cache[name] = builders[name]();
     return undefined;
+}
+
+function isLoaded(name) {
+    return cache[name] !== undefined;
 }
 
 function createLogger(scope) {
