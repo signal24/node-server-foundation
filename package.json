@@ -1,6 +1,6 @@
 {
   "name": "@signal24/node-server-foundation",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Base HTTP/WebSocket and MySQL support for Node.js server applications",
   "main": "src/index.js",
   "scripts": {
@@ -9,16 +9,16 @@
   "author": "Sean Ferguson <hello@sgnl24.com>",
   "license": "MIT",
   "dependencies": {
-    "commander": "^6.0.0",
+    "commander": "^6.2.1",
     "dotenv": "^8.2.0",
-    "fast-jwt": "^0.1.1",
-    "fastify": "^3.1.1",
-    "fastify-formbody": "^4.0.3",
+    "fast-jwt": "^0.5.1",
+    "fastify": "^3.9.2",
+    "fastify-formbody": "^5.0.0",
     "fastify-multipart": "^2.0.3",
-    "fastify-static": "^3.2.0",
-    "mysql2": "^2.1.0",
-    "pino-pretty": "^4.0.3",
-    "uuid": "^8.2.0",
-    "ws": "^7.3.1"
+    "fastify-static": "^3.3.1",
+    "mysql2": "^2.2.5",
+    "pino-pretty": "^4.3.0",
+    "uuid": "^8.3.2",
+    "ws": "^7.4.2"
   }
 }
