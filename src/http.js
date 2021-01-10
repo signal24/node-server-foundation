@@ -14,12 +14,12 @@ module.exports = {
             sslCert = fs.readFileSync($sf.h.resolvePath(process.env.NSF_HTTPS_CERT_FILE), 'utf8');
         else if (process.env.NSF_HTTPS_CERT !== undefined)
             sslCert = process.env.NSF_HTTPS_CERT;
-        
+
         if (process.env.NSF_HTTPS_KEY_FILE !== undefined)
             sslKey = fs.readFileSync($sf.h.resolvePath(process.env.NSF_HTTPS_KEY_FILE), 'utf8');
         else if (process.env.NSF_HTTPS_KEY !== undefined)
             sslKey = process.env.NSF_HTTPS_KEY;
-        
+
         if (sslCert) {
             targetOpts.https = {
                 cert: sslCert,
@@ -62,20 +62,20 @@ module.exports = {
         this.fastify.decorateRequest('processMultipart', function(opts) {
             return app._httpProcessMultipart(this, opts);
         });
-        
-        this.fastify.decorateRequest('files', {});
 
-        const cleanupFn = async (request, reply) => {
+        this.fastify.decorateRequest('files', null);
+        const cleanupFilesFn = async (request, reply) => {
             if (typeof request.files === 'undefined') return;
+            if (request.files === null) return;
             Object.keys(request.files).forEach(key => {
                 fs.unlink(request.files[key].path, () => {});
             });
             request.files = undefined;
         };
-        this.fastify.addHook('onResponse', cleanupFn);
-        this.fastify.addHook('onError', cleanupFn);
-        
-        this.fastify.decorateRequest('json', '');
+        this.fastify.addHook('onResponse', cleanupFilesFn);
+        this.fastify.addHook('onError', cleanupFilesFn);
+
+        this.fastify.decorateRequest('json', null);
         this.fastify.addHook('preHandler', (request, _, done) => {
             if (request.body && request.body.constructor === Object)
                 request.json = request.body; // TODO: change to 'input'
@@ -106,7 +106,7 @@ module.exports = {
 
                     if (allowedTypes !== true && !doesMatchSet(allowedTypes, mimeType))
                         return reject(new $sf.err.InvalidRequestError(`"${mimeType}" is not an allowable file type`));
-                
+
                     let isFileComplete = false;
                     let fileSize = 0;
 
