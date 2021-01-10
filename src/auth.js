@@ -37,14 +37,13 @@ class Auth {
                 }
             }
         }
-        
+
         throw new $sf.err.UnauthorizedError;
     }
 
     async _authorizeJwt(request, reply, token) {
         try {
-            const payloadJson = await this.jwtVerifier(token);
-            const payload = JSON.parse(payloadJson);
+            const payload = await this.jwtVerifier(token);
 
             request.auth = {
                 id: payload.st === 'n' ? Number(payload.sub) : payload.sub,
@@ -53,7 +52,7 @@ class Auth {
 
             return true;
         }
-        
+
         catch (err) {
             if (err instanceof jwt.TokenError) return false;
             throw err;
@@ -78,13 +77,13 @@ class Auth {
             st: subjectType.substr(0, 1),
             exp: this._getExpirationTs(opts)
         };
-        
-        const jwt = await this.jwtSigner(JSON.stringify(payload));
+
+        const jwt = await this.jwtSigner(payload);
 
         if (request) {
             request.auth = {
                 id: opts.subject,
-                jwt: payload  
+                jwt: payload
             };
         }
 
@@ -107,7 +106,7 @@ class Auth {
         if (!request.auth) throw new Error('expected auth object is not present on request');
 
         request.auth.jwt.exp = this._getExpirationTs(opts);
-        
+
         const jwtPayload = await this.jwtSigner(JSON.stringify(request.auth.jwt));
         reply.header('Set-Cookie', `${this.jwtCookieName}=${jwtPayload}; Path=/; HttpOnly`);
     }
