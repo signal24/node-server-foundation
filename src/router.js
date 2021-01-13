@@ -59,6 +59,7 @@ class Router {
         fnNames.includes('store') && this._route('POST', path, targetClass, 'store', fastifyOpts);
         fnNames.includes('update') && this._route('PUT', path + '/:id', targetClass, 'update', fastifyOpts);
         fnNames.includes('destroy') && this._route('DELETE', path + '/:id', targetClass, 'destroy', fastifyOpts);
+        return this;
     }
 
     route(method, path, targetClass, fnName, fastifyOpts) {
@@ -114,6 +115,8 @@ class Router {
             url: this.opts.prefix + path,
             handler: makeWebSocketHandler(this, targetClass)
         });
+
+        return this;
     }
 
     static(localPath, urlPath) {
@@ -130,6 +133,8 @@ class Router {
             prefix: urlPath,
             decorateReply: urlPath === '/'
         });
+
+        return this;
     }
 }
 
