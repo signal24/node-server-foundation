@@ -65,6 +65,12 @@ module.exports = {
 
         this.fastify.decorateRequest(constants.kHiddenContentMeta, null);
 
+        this.fastify.decorateRequest('json', null);
+        this.fastify.addHook('preHandler', async (request, _reply) => {
+            if (!request.headers['content-type'] === 'application/json') return;
+            request.json = request.body;
+        });
+
         this.fastify.register(FastifyFormBody);
         nsfMultipart.setup(this, this.fastify);
 

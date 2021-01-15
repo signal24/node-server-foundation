@@ -1,6 +1,6 @@
 {
   "name": "@signal24/node-server-foundation",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Base HTTP/WebSocket and MySQL support for Node.js server applications",
   "main": "src/index.js",
   "scripts": {

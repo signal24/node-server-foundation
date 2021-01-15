@@ -73,7 +73,7 @@ function reportRequestError(request, err) {
                     method: request.method,
                     query_string: request.query,
                     headers: request.headers,
-                    data: request.json || undefined
+                    data: request.body || undefined
                 };
 
                 event.user = {
