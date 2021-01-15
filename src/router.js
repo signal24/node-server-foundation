@@ -1,5 +1,7 @@
+const constants = require('./constants');
 const helpers = require('./helpers');
 const fastifyStatic = require('fastify-static');
+const fastifyError = require('fastify-error');
 const path = require('path');
 
 // TODO: add ctx w/ req & reply?
@@ -15,6 +17,7 @@ class Router {
             this.opts.middleware = app.defaultMiddleware || [];
             this.opts.prefix = '/';
             this.opts.dir = this.app.srcDir;
+            this.opts.routeOpts = {};
         }
     }
 
@@ -45,27 +48,35 @@ class Router {
         return this;
     }
 
-    get(path, target) { return this.route('GET', path, target); }
-    post(path, target) { return this.route('POST', path, target); }
-    put(path, target) { return this.route('PUT', path, target); }
-    delete(path, target) { return this.route('DELETE', path, target); }
-
-    resource(path, target, fastifyOpts) {
-        const targetClass = helpers.resolveFn(this.opts.dir, target, 'class');
-        const classInstance = new targetClass();
-        const fnNames = getClassFunctions(classInstance);
-        fnNames.includes('index') && this._route('GET', path, targetClass, 'index', fastifyOpts);
-        fnNames.includes('show') && this._route('GET', path + '/:id', targetClass, 'show', fastifyOpts);
-        fnNames.includes('store') && this._route('POST', path, targetClass, 'store', fastifyOpts);
-        fnNames.includes('update') && this._route('PUT', path + '/:id', targetClass, 'update', fastifyOpts);
-        fnNames.includes('destroy') && this._route('DELETE', path + '/:id', targetClass, 'destroy', fastifyOpts);
+    rawBody() {
+        if (this.isBare) return copyRouter(this).rawBody();
+        this.opts.routeOpts.rawBody = true;
         return this;
     }
 
-    route(method, path, targetClass, fnName, fastifyOpts) {
+    head(path, target, routeOpts) { return this.route('GET', path, target, routeOpts); }
+    get(path, target, routeOpts) { return this.route('GET', path, target, routeOpts); }
+    post(path, target, routeOpts) { return this.route('POST', path, target, routeOpts); }
+    put(path, target, routeOpts) { return this.route('PUT', path, target, routeOpts); }
+    patch(path, target, routeOpts) { return this.route('PUT', path, target, routeOpts); }
+    delete(path, target, routeOpts) { return this.route('DELETE', path, target, routeOpts); }
+
+    resource(path, target, routeOpts) {
+        const targetClass = helpers.resolveFn(this.opts.dir, target, 'class');
+        const classInstance = new targetClass();
+        const fnNames = getClassFunctions(classInstance);
+        fnNames.includes('index') && this._route('GET', path, targetClass, 'index', routeOpts);
+        fnNames.includes('show') && this._route('GET', path + '/:id', targetClass, 'show', routeOpts);
+        fnNames.includes('store') && this._route('POST', path, targetClass, 'store', routeOpts);
+        fnNames.includes('update') && this._route('PUT', path + '/:id', targetClass, 'update', routeOpts);
+        fnNames.includes('destroy') && this._route('DELETE', path + '/:id', targetClass, 'destroy', routeOpts);
+        return this;
+    }
+
+    route(method, path, targetClass, fnName, routeOpts) {
         if (typeof targetClass === 'string') {
             if (targetClass.includes('@')) {
-                fastifyOpts = fnName;
+                routeOpts = fnName;
                 [targetClass, fnName] = targetClass.split('@');
             }
 
@@ -80,14 +91,25 @@ class Router {
         if (typeof classInstance[fnName] !== 'function')
             throw new Error(`class for route ${method} ${this.opts.prefix}${path} does not include "${fnName}" function`);
 
-        return this._route(method, path, targetClass, fnName, fastifyOpts);
+        return this._route(method, path, targetClass, fnName, routeOpts);
     }
 
-    _route(method, path, targetClass, fnName, fastifyOpts = {}) {
+    _route(method, path, targetClass, fnName, routeOpts = {}) {
         const handler = makeRouteHandler(this, targetClass, fnName);
 
+        const opts = { ...this.opts.routeOpts, ...routeOpts };
+
+        if (opts.rawBody !== undefined) {
+            if (opts.rawBody) {
+                opts.preParsing = mergeHooks(opts.preParsing, hideBodyFromContentTypeParser);
+                opts.preValidation = mergeHooks(opts.preValidation, unhideBodyFromContentTypeParser);
+            } else {
+                delete opts.rawBody;
+            }
+        }
+
         this.app.fastify.route({
-            ...fastifyOpts,
+            ...opts,
             method,
             url: this.opts.prefix + path,
             handler
@@ -96,7 +118,7 @@ class Router {
         return this;
     }
 
-    ws(path, targetClass, fastifyOpts = {}) {
+    ws(path, targetClass, routeOpts = {}) {
         if (typeof targetClass === 'string') {
             targetClass = helpers.resolveFn(this.opts.dir, targetClass, 'class');
         }
@@ -110,7 +132,7 @@ class Router {
         $sf.wsServer;
 
         this.app.fastify.route({
-            ...fastifyOpts,
+            ...routeOpts,
             method: 'GET',
             url: this.opts.prefix + path,
             handler: makeWebSocketHandler(this, targetClass)
@@ -178,10 +200,11 @@ async function handleThenValidateReply(handler, request, reply) {
     const result = await handler(request, reply);
 
     if (!reply.sent) {
-        if (typeof result == 'undefined')
-            reply.status(501).send('HTTP handler did not return or send data');
-        else
-            reply.send(result);
+        if (typeof result === 'undefined') {
+            throw new $sf.err.UnproductiveHandlerError();
+        }
+
+        reply.send(result);
     }
 }
 
@@ -229,4 +252,30 @@ function wrapHandlerWithMiddleware(router, handler) {
         };
     });
     return result;
+}
+
+function mergeHooks(existingHooks, newHook) {
+    if (existingHooks === undefined) return newHook;
+    if (Array.isArray(existingHooks)) return [...existingHooks, newHook];
+    return [ existingHooks, newHook ];
+}
+
+const CONTENT_TYPE_PARSER_KEYS = ['content-type', 'content-length', 'transfer-encoding'];
+async function hideBodyFromContentTypeParser(request, _reply, _payload) {
+    const hiddenData = {};
+    CONTENT_TYPE_PARSER_KEYS.forEach(key => {
+        if (typeof request.headers[key] === 'undefined') return;
+        hiddenData[key] = request.headers[key];
+        request.headers[key] = undefined;
+    });
+    request[constants.kHiddenContentMeta] = hiddenData;
+}
+
+async function unhideBodyFromContentTypeParser(request, reply) {
+    const hiddenData = request[constants.kHiddenContentMeta];
+    request[constants.kHiddenContentMeta] = null;
+
+    Object.keys(hiddenData).forEach(key => {
+        request.headers[key] = hiddenData[key];
+    });
 }

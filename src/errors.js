@@ -37,6 +37,12 @@ class UserInputError extends CustomMessageError {
     httpStatus = 422;
 }
 
+class UnproductiveHandlerError extends CustomMessageError {
+    httpStatus = 501;
+    type = 'NotImplementedError';
+    message = 'handler did not send or return any data'
+}
+
 function _handleFastifyError(err, request, reply) {
     if (err.httpStatus) {
         request.log.info(`${err.type}: ${err.message}`);
@@ -56,6 +62,7 @@ module.exports = {
     AccessDeniedError,
     NotFoundError,
     InvalidRequestError,
+    UnproductiveHandlerError,
     UserInputError,
     _handleFastifyError
 };
