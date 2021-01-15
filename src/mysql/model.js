@@ -1,8 +1,8 @@
 const modelFns = {
-    // $clone(proxy, target, handler) {
-    //     const clonedTarget = 
-    // }
-    
+    $plain(proxy, target, handler) {
+        return { ...target.$data };
+    },
+
     $getKey(proxy, target, handler) {
         return { id: target.$data.id };
     },
@@ -79,7 +79,7 @@ class ModelProxyHandler {
 
     getOwnPropertyDescriptor(target, key) {
         if (!Object.keys(target.$data).includes(key)) return undefined;
-        
+
         return {
             configurable: true,
             enumerable: true,
@@ -99,7 +99,7 @@ const TYPE_BOOL = 1;
 const TYPE_FLOAT = 3;
 
 // function clone(obj) {
-    
+
 // }
 
 async function populateSchemaCache() {
@@ -119,7 +119,7 @@ async function populateSchemaCache() {
                 schema[matches[1]] = TYPE_FLOAT;
             }
         }
-        
+
         if (Object.keys(schema).length) {
             schemaCache[table] = schema;
         }
