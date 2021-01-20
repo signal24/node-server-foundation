@@ -82,6 +82,7 @@ let cache = {
     app,
     auth,
     err: errors,
+    get: getOrBuildModule,
     h: helpers,
     log: createLogger,
     require: requireFromSrcDir,

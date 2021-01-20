@@ -1,7 +1,7 @@
 const nodePath = require('path');
 const crypto = require('crypto');
 
-let mutexCache = [];
+let mutexCache = {};
 
 module.exports = {
     resolvePath,
@@ -14,7 +14,8 @@ module.exports = {
     promisify,
     randomBytes,
     arrayToObject,
-    smartRequire
+    smartRequire,
+    extract
 };
 
 function resolvePath(path) {
@@ -119,4 +120,12 @@ function smartRequire(path) {
         return global.$requireProxy(require, path);
     else
         return require(path);
+}
+
+function extract(obj, keys) {
+    let ret = {};
+    keys.forEach(key => {
+        ret[key] = obj[key];
+    });
+    return ret;
 }

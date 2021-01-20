@@ -1,6 +1,6 @@
 {
   "name": "@signal24/node-server-foundation",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Base HTTP/WebSocket and MySQL support for Node.js server applications",
   "main": "src/index.js",
   "scripts": {
@@ -9,6 +9,7 @@
   "author": "Sean Ferguson <hello@sgnl24.com>",
   "license": "MIT",
   "dependencies": {
+    "@sentry/node": "^5.30.0",
     "commander": "^6.2.1",
     "dotenv": "^8.2.0",
     "fast-jwt": "^0.5.1",

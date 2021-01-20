@@ -129,7 +129,7 @@ class Router {
 
         // this line appears to do nothing, but it will cause the WebSocket server to be loaded if it hasn't already been
         // this allows us to throw an error at route registration time instead of runtime if ws isn't installed
-        $sf.wsServer;
+        $sf.get('wsServer');
 
         this.app.fastify.route({
             ...routeOpts,
@@ -168,7 +168,7 @@ function trimSlashes(str) {
     if (str.substr(-1) == '/')
         str = str.substr(0, str.length - 1);
     return str;
-};
+}
 
 function copyRouter(src) {
     let copiedOpts = Object.assign({}, src.opts);
@@ -181,7 +181,7 @@ function getClassFunctions(obj) {
     let properties = new Set();
     let currentObj = obj;
     do {
-        Object.getOwnPropertyNames(currentObj).map(item => properties.add(item));
+        Object.getOwnPropertyNames(currentObj).forEach(item => properties.add(item));
     } while ((currentObj = Object.getPrototypeOf(currentObj)))
     return [...properties.keys()].filter(item => typeof obj[item] === 'function');
 }

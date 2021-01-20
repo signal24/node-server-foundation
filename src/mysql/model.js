@@ -1,6 +1,7 @@
 const modelFns = {
-    $plain(proxy, target, handler) {
-        return { ...target.$data };
+    $plain(proxy, target, handler, ...keys) {
+        if (!keys.length) return { ...target.$data };
+        return $sf.h.extract(target.$data, keys);
     },
 
     $getKey(proxy, target, handler) {

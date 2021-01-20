@@ -10,11 +10,12 @@ module.exports = {
 
 let extras = {};
 
-function init(dsn) {
+function init(dsn, options = {}) {
     Sentry.init({
         dsn,
         environment: process.env.NODE_ENV || 'development',
-        release: $sf.app.name + '@' + $sf.app.version
+        release: $sf.app.name + '@' + $sf.app.version,
+        ...options
     });
 
     $sf.app.setRequestErrorHandler((err, request) => {

@@ -1,5 +1,5 @@
 const os = require('os');
-const jwt = require('fast-jwt');
+const fastJwt = require('fast-jwt');
 // const uuid = require('uuid');
 
 class Auth {
@@ -8,8 +8,8 @@ class Auth {
 
         const secret = Buffer.from(process.env.NSF_JWT_SECRET, 'base64');
         this.jwtIssuer = process.env.NSF_JWT_ISSUER;
-        this.jwtSigner = jwt.createSigner({ key: secret });
-        this.jwtVerifier = jwt.createVerifier({ key: secret, cache: true, allowedIss: this.jwtIssuer });
+        this.jwtSigner = fastJwt.createSigner({ key: secret });
+        this.jwtVerifier = fastJwt.createVerifier({ key: secret, cache: true, allowedIss: this.jwtIssuer });
 
         this.jwtIdPrefix = os.hostname() + '/' + (process.env.NSF_APP_NAME || 's24nsf') + '/' + process.pid;
         this.jwtExpirationMins = 15;
@@ -54,7 +54,7 @@ class Auth {
         }
 
         catch (err) {
-            if (err instanceof jwt.TokenError) return false;
+            if (err instanceof fastJwt.TokenError) return false;
             throw err;
         }
     }
