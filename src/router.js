@@ -1,8 +1,7 @@
 const constants = require('./constants');
 const helpers = require('./helpers');
 const fastifyStatic = require('fastify-static');
-const fastifyError = require('fastify-error');
-const path = require('path');
+const pathLib = require('path');
 
 // TODO: add ctx w/ req & reply?
 // TODO: is a chepaer to use a single function and arrays to run middleware?
@@ -151,7 +150,7 @@ class Router {
         }
 
         this.app.fastify.register(fastifyStatic, {
-            root: path.normalize(this.app.srcDir + '/' + localPath),
+            root: pathLib.normalize(this.app.srcDir + '/' + localPath),
             prefix: urlPath,
             decorateReply: urlPath === '/'
         });
