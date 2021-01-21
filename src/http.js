@@ -67,7 +67,7 @@ module.exports = {
 
         this.fastify.decorateRequest('json', null);
         this.fastify.addHook('preHandler', async (request, _reply) => {
-            if (request.headers['content-type'] !== 'application/json') return;
+            if (!/^application\/json/.test(request.headers['content-type'])) return;
             request.json = request.body;
         });
 
