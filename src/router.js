@@ -20,35 +20,33 @@ class Router {
         }
     }
 
-    register(param) {
-        const fn = helpers.resolveFn(this.opts.dir, param);
-        const chainedRouter = copyRouter(this);
-        fn(chainedRouter);
+    register(fn) {
+        fn(this);
         return this;
     }
 
-    prefix(prefix) {
-        if (this.isBare) return copyRouter(this).prefix(prefix);
+    prefix(prefix, shouldCopy) {
+        if (shouldCopy !== false) return copyRouter(this).prefix(prefix, false);
         this.opts.prefix += trimSlashes(prefix) + '/';
         return this;
     }
 
-    dir(dir) {
-        if (this.isBare) return copyRouter(this).dir(dir);
+    dir(dir, shouldCopy) {
+        if (shouldCopy !== false) return copyRouter(this).dir(dir, false);
         this.opts.dir += trimSlashes(dir) + '/';
         return this;
     }
 
-    middleware(name) {
-        if (this.isBare) return copyRouter(this).middleware(name);
+    middleware(name, shouldCopy) {
+        if (shouldCopy !== false) return copyRouter(this).middleware(name, false);
         if (!this.app.registeredMiddleware[name])
             throw new Error(`middleware "${name}" is not registered`);
         this.opts.middleware.unshift(name);
         return this;
     }
 
-    rawBody() {
-        if (this.isBare) return copyRouter(this).rawBody();
+    rawBody(shouldCopy) {
+        if (shouldCopy !== false) return copyRouter(this).rawBody(false);
         this.opts.routeOpts.rawBody = true;
         return this;
     }
@@ -172,6 +170,7 @@ function trimSlashes(str) {
 function copyRouter(src) {
     let copiedOpts = Object.assign({}, src.opts);
     copiedOpts.middleware = Object.assign([], copiedOpts.middleware);
+    copiedOpts.routeOpts = Object.assign({}, copiedOpts.roueOpts);
     const dst = new Router(src.app, copiedOpts);
     return dst;
 }
