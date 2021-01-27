@@ -7,7 +7,7 @@ Object.defineProperty(Array.prototype, 'diff', {
                     return false;
                 }
             }
-            
+
             return true;
         });
     }
@@ -22,7 +22,7 @@ Object.defineProperty(Array.prototype, 'intersect', {
                     return true;
                 }
             }
-            
+
             return false;
         });
     }
@@ -65,6 +65,13 @@ Object.defineProperty(Array.prototype, 'keyBy', {
             result[elem[keyProp]] = elem;
         });
         return result;
+    }
+});
+
+Object.defineProperty(Array.prototype, 'last', {
+    enumerable: false,
+    value: function() {
+        return this[this.length - 1];
     }
 });
 
