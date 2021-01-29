@@ -9,7 +9,7 @@ const modelFns = {
     },
 
     $getOriginal(proxy, target, handler, key) {
-        return target.$original[key];
+        return key ? target.$original[key] : target.$original;
     },
 
     $isDirty(proxy, target, handler, key) {
@@ -24,6 +24,13 @@ const modelFns = {
         let result = {};
         for (let key in target.$original)
             result[key] = target.$data[key];
+        return result;
+    },
+
+    $diff(proxy, target, handler) {
+        let result = {};
+        for (let key in target.$original)
+            result[key] = { o: target.$original[key], n: target.$data[key] };
         return result;
     },
 
