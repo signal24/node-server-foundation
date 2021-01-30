@@ -37,11 +37,12 @@ const modelFns = {
     async $save(proxy, target, handler, txn) {
         const context = txn || $sf.mysql;
         const updates = this.$getDirty(proxy, target);
-        if (!Object.keys(updates).length) return;
+        if (!Object.keys(updates).length) return false;
         runHook(target.$table, proxy, 'beforeSave');
         await context.update(target.$table, updates, this.$getKey(proxy, target));
         runHook(target.$table, proxy, 'onSave');
         target.$original = {};
+        return true;
     }
 };
 
@@ -51,15 +52,14 @@ class ModelProxyHandler {
     }
 
     get(target, key, receiver) {
+        if (key === '$') return target.$tempData;
         if (modelFns[key] !== undefined) return modelFns[key].bind(modelFns, receiver, target, this);
         if (target[key] !== undefined) return target[key];
         return target.$data[key];
     }
 
     set(target, key, value) {
-        if (key === '$ctx') {
-            target.$ctx = value;
-        } else if (target.$data[key] !== value) {
+        if (target.$data[key] !== value) {
             if (target.$original[key] === value) {
                 target.$data[key] = value;
                 delete target.$original[key];
@@ -105,6 +105,7 @@ const proxyHandler = new ModelProxyHandler();
 
 const TYPE_BOOL = 1;
 const TYPE_FLOAT = 3;
+const BOOL_PREFIX_RE = new RegExp('^' + ['is', 'was', 'has', 'had', 'does', 'did', 'should', 'can'].join('|'));
 
 // function clone(obj) {
 
@@ -121,6 +122,10 @@ async function populateSchemaCache() {
             matches[2] = matches[2].toLowerCase();
             if (matches[2] === 'tinyint(1)') {
                 schema[matches[1]] = TYPE_BOOL;
+            } else if (matches[2] === 'tinyint') {
+                if (BOOL_PREFIX_RE.test(matches[1])) {
+                    schema[matches[1]] = TYPE_BOOL;
+                }
             } else if (matches[2] === 'json') {
                 // TODO: future support
             } else if (/^decimal(.+)$/.test(matches[2])) {
@@ -156,7 +161,7 @@ function buildModel(table, data) {
         for (let key in schemaCache[table]) {
             if (data[key] !== undefined) {
                 if (schemaCache[table][key] === TYPE_BOOL) {
-                    data[key] = !!data[key];
+                    data[key] = data[key] > 0;
                 } else if (schemaCache[table][key] === TYPE_FLOAT) {
                     data[key] = data[key] === null ? null : parseFloat(data[key]);
                 }
@@ -166,8 +171,8 @@ function buildModel(table, data) {
 
     let dataTarget = {
         $table: table,
-        $ctx: {},
         $data: data,
+        $tempData: {},
         $original: {}
     };
 

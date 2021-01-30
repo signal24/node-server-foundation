@@ -5,8 +5,8 @@ const Model = require('./mysql/model');
 class MySQL {
     constructor() {
         this.pool = mysql.createPool({
-            host: process.env.NSF_MYSQL_HOST,
-            port: process.env.NSF_MYSQL_PORT,
+            host: process.env.NSF_MYSQL_HOST || '127.0.0.1',
+            port: process.env.NSF_MYSQL_PORT || 3306,
             user: process.env.NSF_MYSQL_USER,
             password: process.env.NSF_MYSQL_PASSWORD,
             database: process.env.NSF_MYSQL_DATABASE,

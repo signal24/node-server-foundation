@@ -79,19 +79,24 @@ const app = new Application();
 module.exports = app;
 
 let cache = {
+    isLoaded,
+
     app,
     auth,
     err: errors,
     get: getOrBuildModule,
-    h: helpers,
-    log: createLogger,
+    helpers,
+    logger: createLogger,
     require: requireFromSrcDir,
-    isLoaded
+
+    h: helpers,
+    r: requireFromSrcDir
 };
 
 const builders = {
     cli: () => require('./cli'),
     mysql: () => require('./mysql'),
+    mongo: () => require('./mongo'),
     sentry: () => require('./sentry'),
     uuid4: () => require('uuid').v4,
     wsServer: () => require('./websocket')
