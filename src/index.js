@@ -33,6 +33,8 @@ class Application {
 
         auth.init();
         this.registerMiddleware('auth', auth.authorizeRequest.bind(auth));
+
+        helpers.initCrypto();
     }
 
     _loadEnv() {

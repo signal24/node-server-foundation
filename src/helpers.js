@@ -6,17 +6,22 @@ let mutexCache = {};
 module.exports = {
     resolvePath,
     resolveFn,
+    smartRequire,
+    arrayToObject,
+    extract,
     format,
-    generateKVHmac,
     mutexExec,
     mutexExecCtx,
     delay,
     promisify,
     randomBytes,
-    arrayToObject,
-    smartRequire,
-    extract
+    initCrypto,
+    encrypt,
+    decrypt,
+    generateKVHmac
 };
+
+////////////////////////////////////
 
 function resolvePath(path) {
     if (nodePath.isAbsolute(path))
@@ -38,14 +43,34 @@ function resolveFn(dir, param, expectedType = 'function') {
     throw new Error(`parameter must be a ${expectedType} or the name of a file that exports a ${expectedType}`);
 }
 
-function generateKVHmac(alg, key, data) {
-    let segments = [];
-    Object.keys(data).sort().forEach(key => {
-        segments.push(key + '=' + data[key]);
-    });
-    data = segments.join('\n') + '\n';
-    return crypto.createHmac(alg, key).update(data).digest();
+////////////////////////////////////
+
+function smartRequire(path) {
+    if (global.$requireProxy)
+        return global.$requireProxy(require, path);
+    else
+        return require(path);
 }
+
+////////////////////////////////////
+
+function arrayToObject(src, keyProp, valueProp) {
+    let result = {};
+    src.forEach(el => {
+        result[el[keyProp]] = el[valueProp];
+    });
+    return result;
+}
+
+function extract(obj, keys) {
+    let ret = {};
+    keys.forEach(key => {
+        ret[key] = obj[key];
+    });
+    return ret;
+}
+
+////////////////////////////////////
 
 function format(src, schema) {
     if (!src) return null;
@@ -65,6 +90,8 @@ function format(src, schema) {
 
     return result;
 }
+
+////////////////////////////////////
 
 async function mutexExec(key, fn, ...args) {
     return await mutexExecCtx(key, null, fn, ...args);
@@ -89,13 +116,13 @@ async function mutexExecCtx(key, context, fn, ...args) {
     return await mutexCache[key];
 }
 
+////////////////////////////////////
+
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function randomBytes(size) {
-    return promisify(crypto.randomBytes, size);
-}
+////////////////////////////////////
 
 function promisify(fn, ...args) {
     return new Promise((resolve, reject) => {
@@ -107,25 +134,65 @@ function promisify(fn, ...args) {
     });
 }
 
-function arrayToObject(src, keyProp, valueProp) {
-    let result = {};
-    src.forEach(el => {
-        result[el[keyProp]] = el[valueProp];
-    });
-    return result;
+////////////////////////////////////
+
+function randomBytes(size) {
+    return promisify(crypto.randomBytes, size);
 }
 
-function smartRequire(path) {
-    if (global.$requireProxy)
-        return global.$requireProxy(require, path);
-    else
-        return require(path);
+////////////////////////////////////
+
+let cryptoKey;
+
+async function initCrypto() {
+    if (!process.env.NSF_ENCRYPT_KEY) return;
+    cryptoKey = Buffer.from(process.env.NSF_ENCRYPT_KEY, 'hex');
 }
 
-function extract(obj, keys) {
-    let ret = {};
-    keys.forEach(key => {
-        ret[key] = obj[key];
+function encrypt(data) {
+    if (cryptoKey === undefined) throw new Error('NSF_ENCRYPT_KEY is not set');
+    return new Promise(async (resolve, reject) => {
+        const isDataBuffer = data instanceof Buffer;
+        const iv = await randomBytes(16);
+        let result = [ iv ];
+        const cipher = crypto.createCipheriv('aes-256-ctr', cryptoKey, iv);
+        cipher.on('error', err => reject(err));
+        cipher.on('data', eData => result.push(eData));
+        cipher.on('end', () => {
+            result = Buffer.concat(result);
+            resolve(isDataBuffer ? result : result.toString('base64'));
+        });
+        cipher.write(data, isDataBuffer ? undefined : 'utf8');
+        cipher.end();
     });
-    return ret;
+}
+
+function decrypt(data) {
+    if (cryptoKey === undefined) throw new Error('NSF_ENCRYPT_KEY is not set');
+    return new Promise(async (resolve, reject) => {
+        const isDataBuffer = data instanceof Buffer;
+        if (!isDataBuffer) data = Buffer.from(data, 'base64');
+        const iv = data.slice(0, 16);
+        let result = [];
+        const decipher = crypto.createDecipheriv('aes-256-ctr', cryptoKey, iv);
+        decipher.on('error', err => reject(err));
+        decipher.on('data', eData => result.push(eData));
+        decipher.on('end', () => {
+            result = Buffer.concat(result);
+            resolve(isDataBuffer ? result : result.toString('utf8'));
+        });
+        decipher.write(data.slice(16));
+        decipher.end();
+    });
+}
+
+////////////////////////////////////
+
+function generateKVHmac(alg, key, data) {
+    let segments = [];
+    Object.keys(data).sort().forEach(key => {
+        segments.push(key + '=' + data[key]);
+    });
+    data = segments.join('\n') + '\n';
+    return crypto.createHmac(alg, key).update(data).digest();
 }
