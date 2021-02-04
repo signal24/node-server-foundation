@@ -80,13 +80,29 @@ class Router {
             targetClass = helpers.resolveFn(this.opts.dir, targetClass, 'class');
         }
 
-        if (typeof fnName === 'undefined') {
-            fnName = 'handle';
+        else if (typeof targetClass === 'function') {
+            const fnPropNames = Object.getOwnPropertyNames(targetClass);
+            if (!fnPropNames.includes('prototype') || fnPropNames.includes('arguments')) {
+                fnName = targetClass;
+                targetClass = null;
+            }
+
+            else {
+                if (typeof fnName === 'undefined') {
+                    fnName = 'handle';
+                }
+            }
         }
 
-        const classInstance = new targetClass();
-        if (typeof classInstance[fnName] !== 'function')
-            throw new Error(`class for route ${method} ${this.opts.prefix}${path} does not include "${fnName}" function`);
+        else {
+            throw new Error(`target for route ${method} ${this.opts.prefix}${path} must be a function, class object, or string class name`);
+        }
+
+        if (targetClass !== null) {
+            const classInstance = new targetClass();
+            if (typeof classInstance[fnName] !== 'function')
+                throw new Error(`class for route ${method} ${this.opts.prefix}${path} does not include "${fnName}" function`);
+        }
 
         return this._route(method, path, targetClass, fnName, routeOpts);
     }
@@ -185,10 +201,16 @@ function getClassFunctions(obj) {
 }
 
 function makeRouteHandler(router, targetClass, fnName) {
-    const handler = async (request, reply) => {
-        const classInstance = new targetClass();
-        return await classInstance[fnName](request, reply);
-    };
+    let handler;
+
+    if (typeof fnName === 'function') {
+        handler = fnName;
+    } else {
+        handler = async (request, reply) => {
+            const classInstance = new targetClass();
+            return await classInstance[fnName](request, reply);
+        };
+    }
 
     const wrappedHandler = wrapHandlerWithMiddleware(router, handler);
     return handleThenValidateReply.bind(this, wrappedHandler);
