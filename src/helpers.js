@@ -81,11 +81,17 @@ function format(src, schema) {
 
     let result = {};
     schema.forEach(key => {
-        // TEMP until models w/ casts are build
-        if (/^is[A-Z]/.test(key))
-            result[key] = !!src[key];
-        else
-            result[key] = src[key];
+        let inKey, outKey;
+
+        if (key.includes(':')) {
+            inKey = key.substr(0, key.indexOf(':'));
+            outKey = key.substr(inKey.length + 1);
+        } else {
+            inKey = key;
+            outKey = key;
+        }
+
+        result[outKey] = src[inKey];
     });
 
     return result;
