@@ -134,18 +134,21 @@ const Injections = {
     },
 
     async _insert(table, obj, cmd) {
-        const [ results ] = await this.exec(cmd + ' INTO `' + table + '` SET ?', obj);
+        const encodedObj = Model.encodeValues(table, obj);
+        const [ results ] = await this.exec(cmd + ' INTO `' + table + '` SET ?', encodedObj);
         obj.id = obj.id || results.insertId;
         return Model.buildModel(table, obj);
     },
 
     async update(table, obj, where) {
+        const encodedObj = Model.encodeValues(table, obj);
+
         let updates = [];
         let bindings = [];
 
-        Object.keys(obj).forEach(key => {
+        Object.keys(encodedObj).forEach(key => {
             updates.push('`' + key + '`=?');
-            bindings.push(obj[key]);
+            bindings.push(encodedObj[key]);
         });
 
         const [ whereFragment, whereBindings ] = buildWhereFragment(where);
