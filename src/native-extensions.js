@@ -13,6 +13,13 @@ Object.defineProperty(Array.prototype, 'diff', {
     }
 });
 
+Object.defineProperty(Array.prototype, 'first', {
+    enumerable: false,
+    value: function() {
+        return this[0] || undefined;
+    }
+});
+
 Object.defineProperty(Array.prototype, 'intersect', {
     enumerable: false,
     value: function(...args) {
@@ -25,43 +32,6 @@ Object.defineProperty(Array.prototype, 'intersect', {
 
             return false;
         });
-    }
-});
-
-Object.defineProperty(Array.prototype, 'unique', {
-    enumerable: false,
-    value: function() {
-        return [...new Set(this)]
-    }
-});
-
-Object.defineProperty(Array.prototype, 'remove', {
-    enumerable: false,
-    value: function(element) {
-        const index = this.indexOf(element);
-        if (index >= 0) this.splice(index, 1);
-    }
-});
-
-Object.defineProperty(Array.prototype, 'replace', {
-    enumerable: false,
-    value: function(oldEl, newEl) {
-        const index = this.indexOf(oldEl);
-        if (index >= 0) this.splice(index, 1, newEl);
-    }
-});
-
-Object.defineProperty(Array.prototype, 'pluck', {
-    enumerable: false,
-    value: function(prop, keyProp) {
-        if (typeof keyProp === 'undefined')
-            return this.map(elem => elem[prop]);
-
-        let result = {};
-        this.forEach(elem => {
-            result[elem[keyProp]] = elem[prop];
-        });
-        return result;
     }
 });
 
@@ -79,7 +49,53 @@ Object.defineProperty(Array.prototype, 'keyBy', {
 Object.defineProperty(Array.prototype, 'last', {
     enumerable: false,
     value: function() {
-        return this[this.length - 1];
+        return this.length ? this[this.length - 1] : undefined;
+    }
+});
+
+Object.defineProperty(Array.prototype, 'pluck', {
+    enumerable: false,
+    value: function(prop, keyProp) {
+        if (typeof keyProp === 'undefined')
+            return this.map(elem => elem[prop]);
+
+        let result = {};
+        this.forEach(elem => {
+            result[elem[keyProp]] = elem[prop];
+        });
+        return result;
+    }
+});
+
+Object.defineProperty(Array.prototype, 'remove', {
+    enumerable: false,
+    value: function(element) {
+        const index = this.indexOf(element);
+        if (index >= 0) this.splice(index, 1);
+    }
+});
+
+Object.defineProperty(Array.prototype, 'replace', {
+    enumerable: false,
+    value: function(element, replacement) {
+        const index = this.indexOf(element);
+        index > -1 && this.splice(index, 1, replacement);
+    }
+});
+
+Object.defineProperty(Array.prototype, 'sortBy', {
+    enumerable: false,
+    value: function(key) {
+        this.sort((a, b) => {
+            return String(a[key]).toLowerCase().localeCompare(String(b[key]).toLowerCase());
+        });
+    }
+});
+
+Object.defineProperty(Array.prototype, 'unique', {
+    enumerable: false,
+    value: function() {
+        return [...new Set(this)]
     }
 });
 
