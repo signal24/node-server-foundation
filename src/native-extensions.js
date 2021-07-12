@@ -43,6 +43,14 @@ Object.defineProperty(Array.prototype, 'remove', {
     }
 });
 
+Object.defineProperty(Array.prototype, 'replace', {
+    enumerable: false,
+    value: function(oldEl, newEl) {
+        const index = this.indexOf(oldEl);
+        if (index >= 0) this.splice(index, 1, newEl);
+    }
+});
+
 Object.defineProperty(Array.prototype, 'pluck', {
     enumerable: false,
     value: function(prop, keyProp) {
