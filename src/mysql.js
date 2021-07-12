@@ -183,6 +183,9 @@ function buildWhereFragment(where) {
     whereKeys.forEach(key => {
         if (where[key] === null) {
             wheres.push('`' + key + '` IS NULL');
+        } else if (Array.isArray(where[key])) {
+            wheres.push('`' + key + '` IN (' + where[key].map(() => '?').join(',') + ')');
+            bindings.push(...where[key]);
         } else {
             wheres.push('`' + key + '`=?');
             bindings.push(where[key]);
