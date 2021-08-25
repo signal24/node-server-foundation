@@ -114,7 +114,7 @@ const Injections = {
     },
 
     async fetchOne(table, where, opts) {
-        const results = await this.fetchWithQuery(table, where, opts);
+        const results = await this.fetch(table, where, opts);
         return results.length > 0 ? results[0] : null;
     },
 
