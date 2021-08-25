@@ -95,18 +95,31 @@ const Injections = {
         return results.length > 0 ? results[0] : null;
     },
 
+    async fetchWithQuery(table, query, bindings) {
+        const results = await this.query(query, bindings);
+        return results.map(row => Model.buildModel(table, { ...row }));
+    },
+
+    async fetchOneWithQuery(table, query, bindings) {
+        const results = await this.fetchWithQuery(table, query, bindings);
+        return result.length > 0 ? results[0] : null;
+    },
+
     async fetch(table, where, opts = {}) {
         const [ whereFragment, whereBindings ] = buildWhereFragment(where);
         const cols = opts.cols === undefined ? '*' : '`' + opts.cols.join('`,`') + '`';
         let query = 'SELECT ' + cols + ' FROM `' + table + '`' + whereFragment;
         if (opts.order !== undefined) query += ' ORDER BY ' + (typeof opts.order === 'object' ? '`' + opts.order.col + '` ' + opts.order.dir : '`' + opts.order + '` ASC');
-        const results = await this.query(query, whereBindings);
-        return results.map(row => Model.buildModel(table, { ...row }));
+        return this.fetchWithQuery(table, query, whereBindings);
     },
 
     async fetchOne(table, where, opts) {
-        const result = await this.fetch(table, where, opts);
-        return result.length > 0 ? result[0] : null;
+        const results = await this.fetchWithQuery(table, where, opts);
+        return results.length > 0 ? results[0] : null;
+    },
+
+    async createModel(table, row) {
+        return Model.buildModel(table, { ...row });
     },
 
     async checkExists(table, where) {

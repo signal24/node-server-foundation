@@ -21,15 +21,15 @@ const modelFns = {
     },
 
     $getDirty(proxy, target, handler) {
-        let result = {};
-        for (let key in target.$original)
+        const result = {};
+        for (const key in target.$original)
             result[key] = target.$data[key];
         return result;
     },
 
     $diff(proxy, target, handler) {
-        let result = {};
-        for (let key in target.$original)
+        const result = {};
+        for (const key in target.$original)
             result[key] = { o: target.$original[key], n: target.$data[key] };
         return result;
     },
@@ -97,9 +97,9 @@ class ModelProxyHandler {
     }
 }
 
-let schemaCache = {};
-let globalHooks = [];
-let tableHooks = {};
+const schemaCache = {};
+const globalHooks = [];
+const tableHooks = {};
 
 const proxyHandler = new ModelProxyHandler();
 
@@ -107,20 +107,17 @@ const TYPE_BOOL = 1;
 const TYPE_JSON = 2;
 const TYPE_FLOAT = 3;
 const TYPE_POINT = 4;
+const TYPE_DATE = 5;
 const BOOL_PREFIX_RE = new RegExp('^' + ['is', 'was', 'has', 'had', 'does', 'did', 'should', 'can'].join('|'));
-
-// function clone(obj) {
-
-// }
 
 async function populateSchemaCache() {
     const tablesResult = await $sf.mysql.query('show tables');
     const tables = tablesResult.map(row => Object.values(row)[0]).filter(name => name.substr(0, 1) !== '_');
-    for (let table of tables) {
-        let schema = {};
+    for (const table of tables) {
+        const schema = {};
         const createStatement = (await $sf.mysql.queryOne('show create table `' + table + '`'))['Create Table'];
         const fieldMatches = createStatement.matchAll(/^\s*`([^`]+)` ([^ ]+) .*?$/mg);
-        for (let matches of fieldMatches) {
+        for (const matches of fieldMatches) {
             matches[2] = matches[2].toLowerCase();
             if (matches[2] === 'tinyint(1)') {
                 schema[matches[1]] = TYPE_BOOL;
@@ -134,6 +131,8 @@ async function populateSchemaCache() {
                 schema[matches[1]] = TYPE_FLOAT;
             } else if (matches[2] === 'point') {
                 schema[matches[1]] = TYPE_POINT;
+            } else if (matches[2] === 'date') {
+                schema[matches[1]] = TYPE_DATE;
             }
         }
 
@@ -177,7 +176,7 @@ function decodeValues(table, data) {
     if (schemaCache[table] === undefined) return data;
 
     const decodedData = { ...data };
-    for (let key in schemaCache[table]) {
+    for (const key in schemaCache[table]) {
         if (decodedData[key] !== undefined) {
             if (schemaCache[table][key] === TYPE_BOOL) {
                 decodedData[key] = decodedData[key] > 0;
@@ -187,6 +186,8 @@ function decodeValues(table, data) {
                 decodedData[key] = decodedData[key] === null ? null : parseFloat(decodedData[key]);
             } else if (schemaCache[table][key] === TYPE_POINT) {
                 // points are automatically decoded to objects w/ x and y props by the mysql library (but also is not automatically encoded... lol)
+            } else if (schemaCache[table][key] === TYPE_DATE) {
+                decodedData[key] = decodedData[key].toISOString().substr(0, 10);
             }
         }
     }
@@ -198,7 +199,7 @@ function encodeValues(table, data) {
     if (schemaCache[table] === undefined) return data;
 
     const encodedData = { ...data };
-    for (let key in schemaCache[table]) {
+    for (const key in schemaCache[table]) {
         if (encodedData[key] !== undefined) {
             if (schemaCache[table][key] === TYPE_BOOL) {
                 encodedData[key] = encodedData[key] ? 1 : 0;
@@ -225,14 +226,14 @@ function encodeValues(table, data) {
 
 // TODO: wrap in pregenerated chain rather than if'ing on every save
 async function runHook(table, model, action) {
-    for (let i = 0; i < globalHooks.length; i++) {
+    for (const i = 0; i < globalHooks.length; i++) {
         if (globalHooks[i][action] !== undefined) {
             await globalHooks[i][action](model);
         }
     }
 
     if (tableHooks[table] !== undefined) {
-        for (let i = 0; i < tableHooks[table].length; i++) {
+        for (const i = 0; i < tableHooks[table].length; i++) {
             if (tableHooks[table][i][action] !== undefined) {
                 await tableHooks[table][i][action](model);
             }
