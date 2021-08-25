@@ -187,7 +187,9 @@ function decodeValues(table, data) {
             } else if (schemaCache[table][key] === TYPE_POINT) {
                 // points are automatically decoded to objects w/ x and y props by the mysql library (but also is not automatically encoded... lol)
             } else if (schemaCache[table][key] === TYPE_DATE) {
-                decodedData[key] = decodedData[key].toISOString().substr(0, 10);
+                if (decodedData[key] instanceof Date) {
+                    decodedData[key] = decodedData[key].toISOString().substr(0, 10);
+                }
             }
         }
     }
