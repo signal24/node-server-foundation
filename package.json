@@ -18,7 +18,7 @@
     "fastify-error": "^0.3.0",
     "fastify-formbody": "^5.0.0",
     "fastify-multipart": "^2.0.3",
-    "fastify-static": "^3.4.0",
+    "fastify-static": "^4.4.1",
     "mysql2": "^2.2.5",
     "pino-pretty": "^4.3.0",
     "uuid": "^8.3.2",
