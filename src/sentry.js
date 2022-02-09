@@ -1,4 +1,5 @@
 const Sentry = require('@sentry/node');
+const Tracing = require('@sentry/tracing');
 const os = require('os');
 
 module.exports = {
