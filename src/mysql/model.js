@@ -137,7 +137,7 @@ async function populateSchemaCache() {
         }
 
         if (Object.keys(schema).length) {
-            schemaCache[table] = schema;
+            schemaCache[table.toLowerCase()] = schema;
         }
     }
 }
@@ -173,6 +173,7 @@ function buildModel(table, data) {
 }
 
 function decodeValues(table, data) {
+    table = table.toLowerCase();
     if (schemaCache[table] === undefined) return data;
 
     const decodedData = { ...data };
@@ -198,6 +199,7 @@ function decodeValues(table, data) {
 }
 
 function encodeValues(table, data) {
+    table = table.toLowerCase();
     if (schemaCache[table] === undefined) return data;
 
     const encodedData = { ...data };
