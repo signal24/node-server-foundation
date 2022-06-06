@@ -43,9 +43,10 @@ class MySQL {
 
     async runInTransaction(fn) {
         const txn = await this.startTransaction();
+        let result;
 
         try {
-            await fn(txn);
+            result = await fn(txn);
             await txn.commit();
         }
 
@@ -53,6 +54,8 @@ class MySQL {
             await txn.rollBack();
             throw err;
         }
+
+        return result;
     }
 }
 
