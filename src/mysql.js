@@ -25,6 +25,7 @@ class MySQL {
     async migrate(dir) {
         const migrator = new Migrator();
         await migrator.run(dir);
+        await Model.populateSchemaCache();
     }
 
     async addHook(table, hook) {

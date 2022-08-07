@@ -111,6 +111,7 @@ const TYPE_DATE = 5;
 const BOOL_PREFIX_RE = new RegExp('^' + ['is', 'was', 'has', 'had', 'does', 'did', 'should', 'can'].join('|'));
 
 async function populateSchemaCache() {
+    Object.keys(schemaCache).forEach(k => delete schemaCache[k]);
     const tablesResult = await $sf.mysql.query('show tables');
     const tables = tablesResult.map(row => Object.values(row)[0]).filter(name => name.substr(0, 1) !== '_');
     for (const table of tables) {
