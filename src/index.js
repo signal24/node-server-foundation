@@ -38,11 +38,20 @@ class Application {
     }
 
     _loadEnv() {
+        this._loadEnvFile(this.baseDir + '.env');
+
+        if (process.env.APP_ENV) {
+            this._loadEnvFile(this.baseDir + '.env.' + process.env.APP_ENV);
+        }
+    }
+
+    _loadEnvFile(path) {
+        if (!fs.existsSync(path)) {
+            return;
+        }
         try {
             const dotenv = require('dotenv');
-            dotenv.config({
-                path: this.baseDir + '.env'
-            });
+            dotenv.config({ path });
         } catch (err) {
             if (err.code === 'MODULE_NOT_FOUND') return;
             throw err;
