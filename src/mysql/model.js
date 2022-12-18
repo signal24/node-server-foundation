@@ -179,13 +179,13 @@ function decodeValues(table, data) {
 
     const decodedData = { ...data };
     for (const key in schemaCache[table]) {
-        if (decodedData[key] !== undefined) {
+        if (decodedData[key] !== undefined && decodedData[key] !== null) {
             if (schemaCache[table][key] === TYPE_BOOL) {
                 decodedData[key] = decodedData[key] > 0;
             } else if (schemaCache[table][key] === TYPE_JSON) {
                 // JSON is decoded automatically by the mysql library (but is not automatically encoded... go figure)
             } else if (schemaCache[table][key] === TYPE_FLOAT) {
-                decodedData[key] = decodedData[key] === null ? null : parseFloat(decodedData[key]);
+                decodedData[key] = parseFloat(decodedData[key]);
             } else if (schemaCache[table][key] === TYPE_POINT) {
                 // points are automatically decoded to objects w/ x and y props by the mysql library (but also is not automatically encoded... lol)
             } else if (schemaCache[table][key] === TYPE_DATE) {
@@ -205,7 +205,7 @@ function encodeValues(table, data) {
 
     const encodedData = { ...data };
     for (const key in schemaCache[table]) {
-        if (encodedData[key] !== undefined) {
+        if (encodedData[key] !== undefined && encodedData[key] !== null) {
             if (schemaCache[table][key] === TYPE_BOOL) {
                 encodedData[key] = encodedData[key] ? 1 : 0;
             } else if (schemaCache[table][key] === TYPE_JSON) {
@@ -213,15 +213,13 @@ function encodeValues(table, data) {
             } else if (schemaCache[table][key] === TYPE_FLOAT) {
                 // no changes to make here
             } else if (schemaCache[table][key] === TYPE_POINT) {
-                if (encodedData[key] !== null) {
-                    if (typeof encodedData[key] !== 'object') throw new Error(`point column "${key}" must be an object`);
-                    if (encodedData[key].x === undefined || encodedData[key].y === undefined) throw new Error(`point column "${key}" must be an object with x and y properties`);
-                    const sqlValue = `POINT(${encodedData[key].x}, ${encodedData[key].y})`;
-                    encodedData[key] = {
-                        ...encodedData[key],
-                        toSqlString: () => sqlValue
-                    };
-                }
+                if (typeof encodedData[key] !== 'object') throw new Error(`point column "${key}" must be an object`);
+                if (encodedData[key].x === undefined || encodedData[key].y === undefined) throw new Error(`point column "${key}" must be an object with x and y properties`);
+                const sqlValue = `POINT(${encodedData[key].x}, ${encodedData[key].y})`;
+                encodedData[key] = {
+                    ...encodedData[key],
+                    toSqlString: () => sqlValue
+                };
             }
         }
     }
